@@ -1,0 +1,16 @@
+{
+  "name": "greeting-app",
+  "version": "1.0.0",
+  "description": "Modern greeting web application with animations",
+  "scripts": {
+    "start": "npx serve . -p 3000",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "serve": "^14.2.0"
+  },
+  "keywords": ["greeting", "web-app"],
+  "license": "MIT"
+}

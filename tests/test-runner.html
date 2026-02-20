@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greeting App - Test Runner</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test { padding: 10px; margin: 8px 0; border-radius: 8px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        h1 { color: #333; }
+        #summary { font-size: 1.2em; margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Greeting App - Verification Tests</h1>
+    <p>Open this file after loading the app. Tests run in an iframe pointing to index.html.</p>
+    <div id="results"></div>
+    <div id="summary"></div>
+
+    <script>
+        (function() {
+            const results = document.getElementById('results');
+            const summary = document.getElementById('summary');
+            let passed = 0;
+            let failed = 0;
+
+            function addResult(name, success, detail) {
+                const div = document.createElement('div');
+                div.className = 'test ' + (success ? 'pass' : 'fail');
+                div.textContent = (success ? '✓ ' : '✗ ') + name + (detail ? ': ' + detail : '');
+                results.appendChild(div);
+                if (success) passed++; else failed++;
+            }
+
+            function runTests() {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = (window.location.protocol === 'file:' ? '../index.html' : '/index.html');
+                document.body.appendChild(iframe);
+
+                iframe.onload = function() {
+                    const doc = iframe.contentDocument;
+                    const win = iframe.contentWindow;
+
+                    try {
+                        const label = doc.querySelector('#name-label');
+                        addResult('Label "Enter Your Name" displays', !!label && label.textContent.trim() === 'Enter Your Name');
+
+                        const input = doc.querySelector('#name-input');
+                        const hasInput = !!input && input.placeholder === 'Type your name here';
+                        addResult('Text input with placeholder "Type your name here"', hasInput);
+
+                        const btn = doc.querySelector('#greet-btn');
+                        addResult('Button labeled "Greet"', !!btn && btn.textContent.trim() === 'Greet');
+
+                        const greetingDisplay = doc.querySelector('#greeting-display');
+                        addResult('Greeting display element exists below button', !!greetingDisplay);
+
+                        input.value = 'Alice';
+                        btn.click();
+
+                        setTimeout(() => {
+                            const greetingText = greetingDisplay.textContent;
+                            addResult('Click with name shows "Hello Alice"', greetingText === 'Hello Alice', greetingText);
+
+                            input.value = '';
+                            btn.click();
+
+                            setTimeout(() => {
+                                const emptyGreeting = greetingDisplay.textContent;
+                                addResult('Empty name shows "Hello there"', emptyGreeting === 'Hello there', emptyGreeting);
+
+                                input.value = 'Test';
+                                btn.click();
+
+                                setTimeout(() => {
+                                    const container = doc.querySelector('#animation-container');
+                                    const hasChildren = container && container.children.length > 0;
+                                    addResult('Animation triggers on click', hasChildren, hasChildren ? container.children.length + ' elements' : 'no elements');
+
+                                    if (win.GreetingApp && win.GreetingApp.getAnimations) {
+                                        const anims = win.GreetingApp.getAnimations();
+                                        addResult('Has 3 animations (confetti, partyPopper, glowingBurst)', anims.length === 3 && anims.includes('confetti') && anims.includes('partyPopper') && anims.includes('glowingBurst'));
+                                    }
+
+                                    const card = doc.querySelector('.card');
+                                    addResult('UI centered - card visible', !!card);
+
+                                    summary.textContent = `Results: ${passed} passed, ${failed} failed`;
+                                    summary.style.color = failed === 0 ? 'green' : 'red';
+                                    document.body.removeChild(iframe);
+                                }, 500);
+                            }, 100);
+                        }, 100);
+                    } catch (e) {
+                        addResult('Tests threw error', false, e.message);
+                        summary.textContent = 'Tests failed with error: ' + e.message;
+                        summary.style.color = 'red';
+                        document.body.removeChild(iframe);
+                    }
+                };
+            }
+
+            runTests();
+        })();
+    </script>
+</body>
+</html>
